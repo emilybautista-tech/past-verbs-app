@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Past Verbs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #fff8e1; /* A light cream color */
+            color: #4b3e34; /* Dark brown for main text */
+        }
+        .container {
+            max-width: 800px;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-orange {
+            background-color: #ff914d; /* Bright orange */
+            color: #ffffff;
+        }
+        .btn-orange:hover {
+            background-color: #e67e3a;
+            transform: translateY(-2px);
+        }
+        .btn-brown {
+            background-color: #8b5d3c; /* Warm brown */
+            color: #ffffff;
+        }
+        .btn-brown:hover {
+            background-color: #6b472e;
+            transform: translateY(-2px);
+        }
+        .btn:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+        .logo {
+            font-size: 2.5rem;
+            color: #ff914d;
+        }
+        .page {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+        .question-card {
+            background-color: #fff3da; /* Light orange for question cards */
+            border-left: 5px solid #ff914d;
+        }
+        .correct {
+            border-color: #10b981; /* Green for correct answer */
+            background-color: #d1fae5;
+        }
+        .incorrect {
+            border-color: #ef4444; /* Red for incorrect answer */
+            background-color: #fee2e2;
+        }
+        .feedback {
+            font-weight: 600;
+        }
+        /* Modal */
+        #messageModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        h1.title {
+            font-size: 3rem; /* Adjusted for larger titles */
+            line-height: 1;
+            font-weight: 900;
+        }
+        h2.subtitle {
+            font-size: 2rem;
+            line-height: 1.5;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <script>
+        // REPLACE THE URL BELOW WITH YOUR DEPLOYED GOOGLE APPS SCRIPT URL
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbySUeERn6cipVGjK9LPtOO61ni5gjz6WLOZdrZMmFF7y7lQQZBcq4pxKXXYo_P1daBO/exec";
+    
+        // Function to save quiz results to Google Sheet
+        async function saveEvaluation(studentName, studentCourse, studentEmail, studentID, score) {
+            if (APPS_SCRIPT_URL.includes("YOUR_APPS_SCRIPT_WEB_APP_URL")) {
+                console.error("Please replace the placeholder URL with your actual Apps Script URL.");
+                showMessage('Error: Please configure the Google Apps Script URL.');
+                return;
+            }
+
+            try {
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Required for Google Apps Script
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: studentName,
+                        course: studentCourse,
+                        email: studentEmail,
+                        id: studentID,
+                        score: score
+                    })
+                });
+                console.log("Data sent to Google Sheet.");
+                showMessage('Your results have been saved to the Google Sheet!');
+            } catch (e) {
+                console.error("Error sending data to Apps Script: ", e);
+                showMessage('There was an error saving your results.');
+            }
+        }
+        
+        // Expose function to global scope
+        window.saveEvaluation = saveEvaluation;
+        
+        // Function to show a message modal
+        function showMessage(message) {
+            document.getElementById('modalMessage').textContent = message;
+            document.getElementById('messageModal').style.display = 'flex';
+        }
+
+        window.closeModal = function() {
+            document.getElementById('messageModal').style.display = 'none';
+        }
+    </script>
+    
+    <div class="container bg-white p-8 rounded-3xl shadow-lg text-center">
+
+        <!-- Splash Screen -->
+        <div id="splashPage" class="page flex flex-col items-center justify-center p-8 active-page">
+            <div class="logo">🚀</div>
+            <h1 class="title font-extrabold text-orange-600 mt-4 mb-2">Past Verbs</h1>
+            <p class="text-xl text-gray-600 mb-8 font-semibold">Ready to master the past tense? Let's begin your journey to fluency!</p>
+            <button onclick="showPage('studyPage')" class="btn btn-orange text-lg">Let's Start!</button>
+        </div>
+
+        <!-- Study Page -->
+        <div id="studyPage" class="page p-8">
+            <h2 class="subtitle font-bold text-orange-600 mb-6">Study Zone</h2>
+
+            <!-- Video 1 Button -->
+            <div class="mb-8 w-full card p-6">
+                <h3 class="text-xl font-bold text-orange-500 mb-3">Regular and Irregular Verbs Explained</h3>
+                <p class="text-gray-600 mb-4">Discover the fundamental difference between regular and irregular verbs. Regular verbs follow a simple pattern by adding "-ed" to their base form. Irregular verbs, on the other hand, change their form completely, and mastering them is a crucial step towards fluency in English.</p>
+                <button onclick="window.open('https://www.youtube.com/embed/BikK0zzbpIs', '_blank')" class="btn btn-brown w-full md:w-auto">Watch Video</button>
+            </div>
+
+            <!-- Video 2 Button -->
+            <div class="mb-8 w-full card p-6">
+                <h3 class="text-xl font-bold text-orange-500 mb-3">Irregular Verbs Song</h3>
+                <p class="text-gray-600 mb-4">Memorizing irregular verbs can be a challenge, but this fun and catchy song makes it easy! Sing along to help these common verbs stick in your memory and improve your pronunciation and recall in a fun way.</p>
+                <button onclick="window.open('https://www.youtube.com/embed/jxl28KQOHy4', '_blank')" class="btn btn-brown w-full md:w-auto">Listen to the Song</button>
+            </div>
+
+            <!-- Verb Review List -->
+            <h3 class="text-2xl font-bold text-orange-500 mb-4">Verbs to Review for the Quiz</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full text-left">
+                <!-- Verb List Items -->
+                <div class="card p-4 flex items-center gap-4">
+                    <span class="text-3xl">🚶‍♂️</span>
+                    <div>
+                        <p class="text-sm text-gray-500">go</p>
+                        <p class="text-lg font-semibold">went</p>
+                    </div>
+                </div>
+                <div class="card p-4 flex items-center gap-4">
+                    <span class="text-3xl">🍔</span>
+                    <div>
+                        <p class="text-sm text-gray-500">eat</p>
+                        <p class="text-lg font-semibold">ate</p>
+                    </div>
+                </div>
+                <div class="card p-4 flex items-center gap-4">
+                    <span class="text-3xl">🥤</span>
+                    <div>
+                        <p class="text-sm text-gray-500">drink</p>
+                        <p class="text-lg font-semibold">drank</p>
+                    </div>
+                </div>
+                <div class="card p-4 flex items-center gap-4">
+                    <span class="text-3xl">📝</span>
+                    <div>
+                        <p class="text-sm text-gray-500">write</p>
+                        <p class="text-lg font-semibold">wrote</p>
+                    </div>
+                </div>
+                <div class="card p-4 flex items-center gap-4">
+                    <span class="text-3xl">📖</span>
+                    <div>
+                        <p class="text-sm text-gray-500">read</p>
+                        <p class="text-lg font-semibold">read</p>
+                    </div>
+                </div>
+                <div class="card p-4 flex items-center gap-4">
+                    <span class="text-3xl">😴</span>
+                    <div>
+                        <p class="text-sm text-gray-500">sleep</p>
+                        <p class="text-lg font-semibold">slept</p>
+                    </div>
+                </div>
+                <div class="card p-4 flex items-center gap-4">
+                    <span class="text-3xl">👨‍🍳</span>
+                    <div>
+                        <p class="text-sm text-gray-500">cook</p>
+                        <p class="text-lg font-semibold">cooked</p>
+                    </div>
+                </div>
+                <div class="card p-4 flex items-center gap-4">
+                    <span class="text-3xl">⚽</span>
+                    <div>
+                        <p class="text-sm text-gray-500">play</p>
+                        <p class="text-lg font-semibold">played</p>
+                    </div>
+                </div>
+                <div class="card p-4 flex items-center gap-4">
+                    <span class="text-3xl">👀</span>
+                    <div>
+                        <p class="text-sm text-gray-500">see</p>
+                        <p class="text-lg font-semibold">saw</p>
+                    </div>
+                </div>
+                <div class="card p-4 flex items-center gap-4">
+                    <span class="text-3xl">🎧</span>
+                    <div>
+                        <p class="text-sm text-gray-500">listen</p>
+                        <p class="text-lg font-semibold">listened</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- New Practice Games Section -->
+            <div class="card p-6 mt-8 w-full text-left">
+                <h3 class="text-2xl font-bold text-orange-500 mb-4">Practice Games!</h3>
+                <p class="text-gray-600 mb-4">Click the links below to play and practice past verbs in a fun way.</p>
+                <div class="flex flex-col md:flex-row gap-4">
+                    <a href="https://wordwall.net/es/resource/24149584/irregular-past-verbs" target="_blank" class="btn btn-orange w-full text-center">Irregular Verbs</a>
+                    <a href="https://wordwall.net/es/resource/30164713/english/simple-past-regular-verbs" target="_blank" class="btn btn-brown w-full text-center">Regular Verbs</a>
+                </div>
+            </div>
+
+            <button onclick="showPage('quickActivityPage')" class="btn btn-brown mt-8">Quick Activity</button>
+            <button onclick="showPage('registerPage')" class="btn btn-orange mt-4">Ready for Quiz!</button>
+        </div>
+
+        <!-- Quick Activity Page -->
+        <div id="quickActivityPage" class="page p-8">
+            <h2 class="subtitle font-bold text-orange-600 mb-6">Quick Activity!</h2>
+            <p class="text-gray-700 mb-4 w-full text-left">Test your knowledge by completing these sentences! Fill in the blanks with the correct past tense form of the verb in parentheses. It's a great way to warm up before the main quiz!</p>
+            <div class="card p-6 mb-8 w-full text-left">
+                <div class="flex flex-col gap-4">
+                    <p class="text-lg">1. My sister <input type="text" data-answer="went" class="w-full md:w-24 p-2 rounded-lg border-2 border-brown-300 focus:outline-none focus:ring-2 focus:ring-brown-500 text-center uppercase" placeholder="?"> to school yesterday. (go)</p>
+                    <p class="text-lg">2. He <input type="text" data-answer="drank" class="w-full md:w-24 p-2 rounded-lg border-2 border-brown-300 focus:outline-none focus:ring-2 focus:ring-brown-500 text-center uppercase" placeholder="?"> all the water. (drink)</p>
+                    <p class="text-lg">3. I <input type="text" data-answer="slept" class="w-full md:w-24 p-2 rounded-lg border-2 border-brown-300 focus:outline-none focus:ring-2 focus:ring-brown-500 text-center uppercase" placeholder="?"> for ten hours. (sleep)</p>
+                    <p class="text-lg">4. We <input type="text" data-answer="ran" class="w-full md:w-24 p-2 rounded-lg border-2 border-brown-300 focus:outline-none focus:ring-2 focus:ring-brown-500 text-center uppercase" placeholder="?"> in the park. (run)</p>
+                    <p class="text-lg">5. She <input type="text" data-answer="ate" class="w-full md:w-24 p-2 rounded-lg border-2 border-brown-300 focus:outline-none focus:ring-2 focus:ring-brown-500 text-center uppercase" placeholder="?"> a big hamburger. (eat)</p>
+                    <p class="text-lg">6. They <input type="text" data-answer="played" class="w-full md:w-24 p-2 rounded-lg border-2 border-brown-300 focus:outline-none focus:ring-2 focus:ring-brown-500 text-center uppercase" placeholder="?"> tennis last week. (play)</p>
+                    <p class="text-lg">7. He <input type="text" data-answer="saw" class="w-full md:w-24 p-2 rounded-lg border-2 border-brown-300 focus:outline-none focus:ring-2 focus:ring-brown-500 text-center uppercase" placeholder="?"> a movie yesterday. (see)</p>
+                    <p class="text-lg">8. I <input type="text" data-answer="wrote" class="w-full md:w-24 p-2 rounded-lg border-2 border-brown-300 focus:outline-none focus:ring-2 focus:ring-brown-500 text-center uppercase" placeholder="?"> a letter to my mom. (write)</p>
+                    <p class="text-lg">9. We <input type="text" data-answer="read" class="w-full md:w-24 p-2 rounded-lg border-2 border-brown-300 focus:outline-none focus:ring-2 focus:ring-brown-500 text-center uppercase" placeholder="?"> a great book. (read)</p>
+                    <p class="text-lg">10. My dad <input type="text" data-answer="cooked" class="w-full md:w-24 p-2 rounded-lg border-2 border-brown-300 focus:outline-none focus:ring-2 focus:ring-brown-500 text-center uppercase" placeholder="?"> dinner for us. (cook)</p>
+                </div>
+                <button onclick="checkActivityAnswers()" class="btn btn-brown w-full md:w-auto mt-4">Check All</button>
+                <div id="activityFeedback" class="mt-4 font-semibold text-center md:text-left"></div>
+            </div>
+            <button onclick="showPage('studyPage')" class="btn btn-orange mt-8">Back to Study</button>
+        </div>
+
+        <!-- Registration Page -->
+        <div id="registerPage" class="page p-8">
+            <h2 class="subtitle font-bold text-orange-600 mb-6">Quiz Registration</h2>
+            <form id="registrationForm" class="flex flex-col gap-4 w-full">
+                <div>
+                    <label for="studentName" class="block text-left mb-1 font-semibold">Student Name</label>
+                    <input type="text" id="studentName" placeholder="Enter your name" required class="w-full p-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                </div>
+                <div>
+                    <label for="studentEmail" class="block text-left mb-1 font-semibold">Institutional Email</label>
+                    <input type="email" id="studentEmail" placeholder="example@school.edu" required class="w-full p-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                </div>
+                <div>
+                    <label for="studentID" class="block text-left mb-1 font-semibold">ID Number</label>
+                    <input type="text" id="studentID" placeholder="Document number" required class="w-full p-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                </div>
+                <div>
+                    <label for="studentCourse" class="block text-left mb-1 font-semibold">Class</label>
+                    <input type="text" id="studentCourse" placeholder="Enter your class" required class="w-full p-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                </div>
+                <button type="submit" class="btn btn-orange mt-4">Start Quiz</button>
+            </form>
+        </div>
+
+        <!-- Quiz Page -->
+        <div id="quizPage" class="page p-8">
+            <h2 class="subtitle font-bold text-orange-600 mb-6">Quiz</h2>
+            <div id="questionContainer" class="w-full">
+                <!-- Single question will be dynamically inserted here -->
+            </div>
+            <button id="nextQuestionBtn" onclick="checkAnswerAndProceed()" class="btn btn-brown mt-8">Next Question</button>
+            <button id="finishQuizBtn" onclick="checkAnswerAndProceed()" class="btn btn-brown mt-8" style="display:none;">Finish and View Results</button>
+        </div>
+
+        <!-- Results Page -->
+        <div id="resultsPage" class="page p-8">
+            <h2 class="subtitle font-bold text-orange-600 mb-6">Results!</h2>
+            <div id="resultSummary" class="text-xl text-gray-700 mb-8"></div>
+            <div id="resultFeedback" class="text-left flex flex-col gap-4"></div>
+            <button onclick="showPage('studyPage')" class="btn btn-orange mt-8">Back to Study</button>
+        </div>
+
+    </div>
+
+    <!-- Message Modal -->
+    <div id="messageModal">
+        <div class="modal-content">
+            <p id="modalMessage" class="text-lg font-semibold"></p>
+            <button onclick="closeModal()" class="btn btn-orange mt-4">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // Array of questions and answers
+        const quizQuestions = [
+            { question: "What is the past tense of the verb 'eat'?", options: ["eat", "eated", "ate", "eats"], answer: "ate", hint: "This verb is irregular. The past form is a single syllable word.", svg: `<img src="https://i.pinimg.com/736x/7f/f1/95/7ff195a667d9be6c8063432e2d6667e4.jpg" alt="A person eating an apple" class="w-16 h-16 rounded-full object-cover">` },
+            { question: "What is the past tense of the verb 'play'?", options: ["play", "plays", "played", "playing"], answer: "played", hint: "This is a regular verb. You simply add '-ed' at the end.", svg: `<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcScA-Ltg9frmWPPXjgg0DUo9T9Xndk4-Z-D9g&s" alt="A person playing a sport" class="w-16 h-16 rounded-full object-cover">` },
+            { question: "What is the past tense of the verb 'see'?", options: ["saw", "seed", "seen", "see"], answer: "saw", hint: "This verb is irregular. The past form is a three-letter word.", svg: `<img src="https://esllibrary.s3.amazonaws.com/uploads/post/title_image/1577/Tanya_See-Look-and-Watch_Banner.png" alt="An eye" class="w-16 h-16 rounded-full object-cover">` },
+            { question: "What is the past tense of the verb 'listen'?", options: ["listened", "listen", "listeneds", "listen't"], answer: "listened", hint: "This is a regular verb. You add a two-letter ending to it.", svg: `<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ8FCZPbakNKWa4UXsvmMaRFin3qrz9WMQktg&s" alt="A person listening to music" class="w-16 h-16 rounded-full object-cover">` },
+            { question: "What is the past tense of the verb 'write'?", options: ["wrate", "wrote", "written", "write"], answer: "wrote", hint: "This verb is irregular. The vowel 'i' changes to 'o' in the past form.", svg: `<img src="https://t3.ftcdn.net/jpg/03/98/45/06/360_F_398450646_uEpwdJvKe92eaL53mWDwAU5vaJefjK8T.jpg" alt="A person writing on a paper" class="w-16 h-16 rounded-full object-cover">` },
+            { question: "What is the past tense of the verb 'take'?", options: ["taked", "took", "taken", "take"], answer: "took", hint: "This verb is irregular. The past form is a four-letter word with a double 'o' in the middle.", svg: `<img src="https://www.wikihow.com/images/thumb/6/6d/Tell-the-Differences-Between-Take-and-Took-Step-3-Version-4.jpg/v4-460px-Tell-the-Differences-Between-Take-and-Took-Step-3-Version-4.jpg" alt="A person taking a phone" class="w-16 h-16 rounded-full object-cover">` },
+            { question: "What is the past tense of the verb 'sing'?", options: ["sanged", "sung", "sang", "singed"], answer: "sang", hint: "This is an irregular verb. The 'i' changes to 'a' in the past tense.", svg: `<img src="https://www.shutterstock.com/image-vector/happy-cute-kid-girl-sing-600nw-2042531354.jpg" alt="A girl singing" class="w-16 h-16 rounded-full object-cover">` },
+            { question: "What is the past tense of the verb 'dance'?", options: ["danced", "dancen", "danc", "dance"], answer: "danced", hint: "This is a regular verb. You only need to add one letter at the end.", svg: `<img src="https://www.shutterstock.com/image-vector/couple-dancing-night-club-party-600nw-2502128457.jpg" alt="A couple dancing" class="w-16 h-16 rounded-full object-cover">` },
+            { question: "What is the past tense of the verb 'read'?", options: ["read", "readed", "red", "reading"], answer: "read", hint: "This verb is irregular and its past form is spelled the same as the present, but pronounced differently.", svg: `<img src="https://media.assettype.com/healthday%2Fimport%2F34161128%2Forigin.jpg?w=480&auto=format%2Ccompress&fit=max" alt="A person reading a book" class="w-16 h-16 rounded-full object-cover">` },
+            { question: "What is the past tense of the verb 'cook'?", options: ["cook", "cooked", "cooken", "cooking"], answer: "cooked", hint: "This is a regular verb. Just add a two-letter ending.", svg: `<img src="https://static.vecteezy.com/system/resources/previews/048/684/552/non_2x/chef-cooking-food-on-the-stove-cartoon-style-vector.jpg" alt="A chef cooking" class="w-16 h-16 rounded-full object-cover">` }
+        ];
+
+        const quickActivityAnswers = [
+            "went", "drank", "slept", "ran", "ate", "played", "saw", "wrote", "read", "cooked"
+        ];
+        
+        let quizTaken = false;
+        let studentName = "";
+        let studentCourse = "";
+        let studentEmail = "";
+        let studentID = "";
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let allQuizQuestionsAnswered = false;
+        let quizAnswers = {};
+
+        // Function to switch between pages
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.style.display = 'none';
+            });
+            document.getElementById(pageId).style.display = 'flex';
+        }
+
+        // Handle registration form submission
+        document.getElementById('registrationForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            if (quizTaken) {
+                showMessage("You have already completed the quiz. You can only take it once per session.");
+                return;
+            }
+
+            studentName = document.getElementById('studentName').value;
+            studentCourse = document.getElementById('studentCourse').value;
+            studentEmail = document.getElementById('studentEmail').value;
+            studentID = document.getElementById('studentID').value;
+            
+            // Reset quiz state for a new attempt
+            currentQuestionIndex = 0;
+            score = 0;
+            quizAnswers = {};
+            allQuizQuestionsAnswered = false;
+
+            displayQuestion();
+            showPage('quizPage');
+        });
+
+        // Function to display a single question
+        function displayQuestion() {
+            const questionContainer = document.getElementById('questionContainer');
+            questionContainer.innerHTML = '';
+            
+            if (currentQuestionIndex >= quizQuestions.length) {
+                allQuizQuestionsAnswered = true;
+                showResultsPage();
+                return;
+            }
+
+            const q = quizQuestions[currentQuestionIndex];
+            const qCard = document.createElement('div');
+            qCard.className = 'question-card card p-6 mb-6 text-left w-full';
+            qCard.innerHTML = `
+                <div class="flex flex-col md:flex-row items-center gap-4 mb-4">
+                    ${q.svg}
+                    <p class="font-bold text-lg md:text-xl">Question ${currentQuestionIndex + 1}: ${q.question}</p>
+                </div>
+                <div id="optionsContainer">
+                    ${q.options.map(option => `
+                        <label class="block cursor-pointer p-2 rounded-lg hover:bg-brown-100 transition duration-200">
+                            <input type="radio" name="currentQuestion" value="${option}" class="mr-2">
+                            <span>${option}</span>
+                        </label>
+                    `).join('')}
+                </div>
+                <div id="feedbackForQuestion" class="mt-4 font-normal text-gray-700"></div>
+            `;
+            questionContainer.appendChild(qCard);
+
+            const nextBtn = document.getElementById('nextQuestionBtn');
+            const finishBtn = document.getElementById('finishQuizBtn');
+            if (currentQuestionIndex === quizQuestions.length - 1) {
+                nextBtn.style.display = 'none';
+                finishBtn.style.display = 'block';
+            } else {
+                nextBtn.style.display = 'block';
+                finishBtn.style.display = 'none';
+            }
+        }
+        
+        // Function to get a motivational phrase based on score
+        function getMotivationalPhrase(score, total) {
+            const percentage = (score / total) * 100;
+            if (percentage >= 90) {
+                return 'Congratulations! You are a past verbs expert!';
+            } else if (percentage >= 70) {
+                return 'Well done! Keep practicing and you will reach the top.';
+            } else if (percentage >= 50) {
+                return 'Good try! Review a little more and you will do great next time.';
+            } else {
+                return "Don't give up! With a little more study, you will improve a lot.";
+            }
+        }
+
+        // Handle quiz submission
+        async function checkAnswerAndProceed(event) {
+            if (event) event.preventDefault();
+            
+            const selectedOption = document.querySelector('input[name="currentQuestion"]:checked');
+            if (!selectedOption) {
+                showMessage('Please select an option before continuing.');
+                return;
+            }
+
+            const currentQuestion = quizQuestions[currentQuestionIndex];
+            const isCorrect = (selectedOption.value === currentQuestion.answer);
+            
+            quizAnswers[currentQuestionIndex] = {
+                question: currentQuestion.question,
+                userAnswer: selectedOption.value,
+                correctAnswer: currentQuestion.answer,
+                isCorrect: isCorrect
+            };
+
+            const questionCard = document.querySelector('.question-card');
+            const feedbackSection = document.getElementById('feedbackForQuestion');
+
+            if (isCorrect) {
+                questionCard.classList.add('correct');
+                feedbackSection.innerHTML = `<span class="text-green-700 font-bold">Correct!</span>`;
+            } else {
+                questionCard.classList.add('incorrect');
+                feedbackSection.innerHTML = `<span class="text-red-700 font-bold">Incorrect.</span> Hint: ${currentQuestion.hint}`;
+            }
+
+            // Disable all radio buttons after a selection is made
+            document.querySelectorAll('input[name="currentQuestion"]').forEach(radio => radio.disabled = true);
+            
+            // Wait a moment for feedback to be visible before showing the next question
+            setTimeout(() => {
+                currentQuestionIndex++;
+                displayQuestion();
+            }, 2000); // 2 seconds delay
+        }
+
+        function showResultsPage() {
+            let finalScore = 0;
+            const resultFeedbackSection = document.getElementById('resultFeedback');
+            resultFeedbackSection.innerHTML = '';
+            
+            quizQuestions.forEach((q, index) => {
+                const userResponse = quizAnswers[index];
+                if (userResponse.isCorrect) {
+                    finalScore++;
+                }
+
+                const feedbackItem = document.createElement('div');
+                feedbackItem.className = 'p-4 rounded-lg';
+                feedbackItem.innerHTML = `
+                    <p class="font-bold">${q.question}</p>
+                    <p class="feedback mt-2">
+                        Your answer: <span class="${userResponse.isCorrect ? 'text-green-700' : 'text-red-700'}">${userResponse.userAnswer}</span>
+                        <br>
+                        Correct answer: <span class="text-green-700">${userResponse.correctAnswer}</span>
+                    </p>
+                `;
+                resultFeedbackSection.appendChild(feedbackItem);
+            });
+
+            const motivationalPhrase = getMotivationalPhrase(finalScore, quizQuestions.length);
+            const resultSummary = document.getElementById('resultSummary');
+            resultSummary.innerHTML = `
+                <p class="font-bold text-orange-600 text-2xl">${motivationalPhrase}</p>
+                <p class="mt-2">You scored ${finalScore} out of ${quizQuestions.length} points.</p>
+            `;
+            
+            // Save results to Google Sheet and mark quiz as taken
+            window.saveEvaluation(studentName, studentCourse, studentEmail, studentID, finalScore);
+            quizTaken = true;
+            
+            showPage('resultsPage');
+        }
+
+        // Short activity logic
+        function checkActivityAnswers() {
+            const inputs = document.querySelectorAll('#quickActivityPage input[type="text"]');
+            const feedback = document.getElementById('activityFeedback');
+            let allCorrect = true;
+
+            inputs.forEach((input, index) => {
+                const userAnswer = input.value.trim().toLowerCase();
+                const correctAnswer = quickActivityAnswers[index];
+                const isCorrect = userAnswer === correctAnswer;
+
+                if (isCorrect) {
+                    input.style.borderColor = '#10b981';
+                } else {
+                    allCorrect = false;
+                    input.style.borderColor = '#ef4444';
+                }
+            });
+
+            if (allCorrect) {
+                feedback.textContent = 'Correct! Excellent job! All answers are right!';
+                feedback.style.color = '#10b981';
+            } else {
+                feedback.textContent = `Some answers are incorrect. Review your spelling and verb forms.`;
+                feedback.style.color = '#ef4444';
+            }
+        }
+
+        // Show the splash page on load
+        window.onload = function() {
+            showPage('splashPage');
+        };
+    </script>
+</body>
+</html>
